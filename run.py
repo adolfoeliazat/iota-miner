@@ -35,7 +35,7 @@ SEED = ""
 
 # The amount of addresses to check per seed. Generating addresses is very time consuming. Keep as low as possible.
 # Set to zero if you don't want to generate addresses but just seeds and seed checksums.
-ADDRESSES_PER_SEED = 2
+ADDRESSES_PER_SEED = 2  # INTEGER - No quotes!
 
 # Known address you are looking for. None or empty string, if you just want to run until the end of the script. You
 # can lookup the addresses in the output file later.
@@ -50,18 +50,18 @@ ABORT_AT_ADDRESS = "MY9KNOWN9ADDRESS9"
 ABORT_AT_SEED_CHECKSUM = ""
 
 # Needs to be set to 1, 2 or 3 ACCORDING to what your wallet used!
-ADDRESS_SECURITY_LEVEL = 2
+ADDRESS_SECURITY_LEVEL = 2  # INTEGER - No quotes!
 
 # You can disable console status output during execution which will increase execution speed. Will make a huge
 # difference if ADDRESSES_PER_SEED is set to 0.
-STATUS_OUTPUT = True
+STATUS_OUTPUT = True  # Boolean - No quotes!
 
 # Characters to use for brute forcing. You can limit the character set if you don't want to go the full range for some
 # reason.
 BRUTE_FORCE_CHARACTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ9'  
 
 # More processes than CPU/Cores does not make sense. Decrease, if you want to use the machine in parallel.
-PARALLEL_PROCESSES = os.cpu_count() -1
+PARALLEL_PROCESSES = os.cpu_count() - 1
 
 # Output file to store addresses in. None or empty string, if you don't want to write output.
 OUTPUT_FILE = "addresses.log"
