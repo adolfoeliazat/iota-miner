@@ -2,11 +2,10 @@
 You wanted an IOTA miner? Here is your IOTA miner... mining your seed. IOTA seed recovery tool to straighten your typos.
 
 Operation Modes:
-
-    1. Just check the addresses of the given seed  
-    2. Brute-force missing characters up to a 81 character seed  
-    3. Flip single characters to detect single typos  
-    4. Inject single characters at all positions to find single missing characters
+- Just check the addresses of the given seed  
+- Brute-force missing characters up to a 81 character seed  
+- Flip single characters to detect single typos  
+- Inject single characters at all positions to find single missing characters
   
 Upcoming features:
  - Injection marker (wildcard) telling the tool where to inject characters
