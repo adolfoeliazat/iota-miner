@@ -1,5 +1,5 @@
 # iota-miner
-You wanted an IOTA miner? Here is your IOTA miner... mining your seed. IOTA seed recovery tool to straighten your typos.
+You wanted an IOTA miner? Here is your IOTA miner... mining your seed. IOTA seed recovery tool to straighten your typos. Please note that if you are missing or got wrong more than a very few characters, chances of discovering your seed decrease rapidly to zero.
 
 ##### Operation Modes:
 
@@ -12,8 +12,7 @@ You wanted an IOTA miner? Here is your IOTA miner... mining your seed. IOTA seed
 
      - Injection marker (wildcard) telling the tool where to inject characters
      - Option to only test 81 character seeds
-     
-Please note that if you are missing or got wrong more than a very few characters, chances of discovering your seed decrease rapidly to zero.
+   
 
 ## Prerequisite
 - Python3
