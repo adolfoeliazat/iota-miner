@@ -16,6 +16,7 @@ This tool ships with a copy of the Pyota libary (v1.2.0b1), because:
 1) Install Python3
 2) Install required Python 3 modules
     > pip3 install pyota
+    
     > pip3 install pyopenssl
 
 # Execution
