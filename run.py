@@ -35,7 +35,7 @@ SEED = ""
 
 # The amount of addresses to check per seed. Generating addresses is very time consuming. Keep as low as possible.
 # Set to zero if you don't want to generate addresses but just seeds and seed checksums.
-ADDRESSES_PER_SEED = 3
+ADDRESSES_PER_SEED = 2
 
 # Known address you are looking for. None or empty string, if you just want to run until the end of the script. You
 # can lookup the addresses in the output file later.
@@ -45,7 +45,7 @@ ABORT_AT_ADDRESS = "MY9KNOWN9ADDRESS9"
 # if you just want to run until the end of the script. You can lookup the checksums in the output file later.
 # ATTENTION: You can speed up dramatically, if you set ADDRESSES_PER_SEED to 0 and skip address generation!
 # ATTENTION: Due to recent exchange of the hashing algorithm used in IOTA, checksums differ between IRI 1.2 and 1.3!
-ABORT_AT_SEED_CHECKSUM = "CHK"
+ABORT_AT_SEED_CHECKSUM = "DJV"
 
 # Needs to be set to 1, 2 or 3 ACCORDING to what your wallet used!
 ADDRESS_SECURITY_LEVEL = 2
@@ -219,6 +219,7 @@ def print_configuration():
         print("   - The script will abort once the SEED checksum '{}' was found".format(
             ABORT_AT_SEED_CHECKSUM
         ))
+        print("     (Better don't stop at the first occurrence but search the output file!)")
     else:
         print("   - The script will run until all SEEDs were generated")
 
@@ -340,7 +341,7 @@ if __name__ == '__main__':
     try:
         print()
         print("You wanted a miner? Here is your IOTA miner... mining your seed.")
-        print("IOTA seed recovery tool to straighten your typos.", "Running on PyOTA vers. ", iota.__version__)
+        print("IOTA seed recovery tool to straighten your typos.", "Running on PyOTA vers.", iota.__version__)
         print()
 
         print("              ###################################################               ")
