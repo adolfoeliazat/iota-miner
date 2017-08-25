@@ -361,6 +361,18 @@ if __name__ == '__main__':
         print("know any of your previously used addresses, you can search the output file for.")
         print()
 
+        # Check configuration variable types
+        assert isinstance(SEED, str)
+        assert isinstance(ABORT_AT_ADDRESS, str)
+        assert isinstance(ABORT_AT_SEED_CHECKSUM, str)
+        assert isinstance(BRUTE_FORCE_CHARACTERS, str)
+        assert isinstance(SEED, str)
+        assert isinstance(OUTPUT_FILE, str)
+        assert isinstance(ADDRESSES_PER_SEED, int)
+        assert isinstance(ADDRESS_SECURITY_LEVEL, int)
+        assert isinstance(PARALLEL_PROCESSES, int)
+        assert isinstance(STATUS_OUTPUT, bool)
+
         # Check python version
         if sys.version_info.major < 3:
             print("ERROR: Python3 required!")
