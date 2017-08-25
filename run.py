@@ -41,11 +41,13 @@ ADDRESSES_PER_SEED = 2
 # can lookup the addresses in the output file later.
 ABORT_AT_ADDRESS = "MY9KNOWN9ADDRESS9"
 
-# If can remember the checksum of your seed, you might want to search for seeds with a the same. None or empty string,
-# if you just want to run until the end of the script. You can lookup the checksums in the output file later.
+# If you can remember the checksum of your seed, you might want to search for seeds with a the same. None or empty
+# string, if you just want to run until the end of the script. You can lookup the checksums in the output file later.
+# It is recommended to leave this variable empty and manually search the output for your checksum, as there might be
+# multiple seeds with your checksum!
 # ATTENTION: You can speed up dramatically, if you set ADDRESSES_PER_SEED to 0 and skip address generation!
 # ATTENTION: Due to recent exchange of the hashing algorithm used in IOTA, checksums differ between IRI 1.2 and 1.3!
-ABORT_AT_SEED_CHECKSUM = "DJV"
+ABORT_AT_SEED_CHECKSUM = ""
 
 # Needs to be set to 1, 2 or 3 ACCORDING to what your wallet used!
 ADDRESS_SECURITY_LEVEL = 2
