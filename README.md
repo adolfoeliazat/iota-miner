@@ -19,7 +19,7 @@ You wanted an IOTA miner? Here is your IOTA miner... mining your seed. IOTA seed
 - Pyota + dependencies
 
 ## Important
-This tool ships with a copy of the Pyota libary (v1.1.3), because:
+This tool ships with a copy of the Pyota libary (v1.2.0b1), because:
 - It is the latest version and newer than the one available via PIP (at the time of writing)
 - It is the last version still supporting CURL, which is going to be replaced with KERL due to an UPDATE in the IOTA protocol
 
