@@ -32,6 +32,6 @@ This tool ships with a copy of the Pyota libary (v1.2.0b1), because:
     > pip3 install pyopenssl
 
 ## Execution
-1) Configure settings at the top section in run.py
+1) Edit configuration section in "run.py"
 2) Launch run.py
     > python3 run.py
