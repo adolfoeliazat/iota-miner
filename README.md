@@ -30,7 +30,7 @@ This tool ships with a copy of the Pyota libary (v1.2.0b1), because:
     
     > pip3 install pyopenssl
     
-## Prerequisite
+## Prerequisite (coming with the installation steps above)
 - Python3
 - PyOpenSSL
 - Pyota + dependencies
