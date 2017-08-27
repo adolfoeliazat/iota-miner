@@ -10,23 +10,6 @@ You wanted an IOTA miner? Here is your IOTA miner... mining your seed. IOTA seed
     - Inject single characters at all positions to find a missing one
     
     - You can set injection markers (* / **) to guide the tool at a certain section of your seed
-  
-## Prerequisite
-- Python3
-- PyOpenSSL
-- Pyota + dependencies
-
-## Important
-This tool ships with a copy of the Pyota libary (v1.2.0b1), because:
-- It is the latest version and newer than the one available via PIP (at the time of writing)
-- It is the last version still supporting CURL, which is going to be replaced with KERL due to an UPDATE in the IOTA protocol
-
-## Installation
-1) Install Python3
-2) Install required Python 3 modules
-    > pip3 install pyota
-    
-    > pip3 install pyopenssl
 
 ## Execution
 1) Edit configuration section in "run.py"
@@ -34,3 +17,21 @@ This tool ships with a copy of the Pyota libary (v1.2.0b1), because:
     2) Adapt some default configuration values to your specific needs
 2) Open a command line window, traverse to the tool's folder and launch "run.py" with your Python3 interpreter
 3) Follow the dialogue
+
+## Important
+This tool ships with a copy of the Pyota libary (v1.2.0b1), because:
+- It is the latest version and newer than the one available via PIP (at the time of writing)
+- It is the last version still supporting CURL, which is going to be replaced with KERL due to an UPDATE in the IOTA protocol
+  
+## Installation
+1) Install Python3
+2) Install required Python 3 modules
+    > pip3 install pyota
+    
+    > pip3 install pyopenssl
+    
+## Prerequisite
+- Python3
+- PyOpenSSL
+- Pyota + dependencies
+
