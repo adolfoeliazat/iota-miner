@@ -11,6 +11,11 @@ You wanted an IOTA miner? Here is your IOTA miner... mining your seed. IOTA seed
     
     You can set injection markers (* / **) to guide the tool at a certain section of your seed
 
+## Important
+This tool ships with a copy of the Pyota libary (v1.2.0b1), because:
+- It is the latest version and newer than the one available via PIP (at the time of writing)
+- It is the last version still supporting CURL, which is going to be replaced with KERL due to an UPDATE in the IOTA protocol
+
 ## Execution
 1) (Follow installation steps below)
 2) Edit configuration section in "run.py"
@@ -18,11 +23,6 @@ You wanted an IOTA miner? Here is your IOTA miner... mining your seed. IOTA seed
     2) Adapt some default configuration values to your specific needs
 3) Open a command line window, traverse to the tool's folder and launch "run.py" with your Python3 interpreter
 4) Follow the dialogue
-
-## Important
-This tool ships with a copy of the Pyota libary (v1.2.0b1), because:
-- It is the latest version and newer than the one available via PIP (at the time of writing)
-- It is the last version still supporting CURL, which is going to be replaced with KERL due to an UPDATE in the IOTA protocol
   
 ## Installation
 1) Install Python3
