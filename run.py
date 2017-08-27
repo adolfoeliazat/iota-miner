@@ -13,7 +13,7 @@
 # You may not complain if this tool did not help you - sorry about that!
 #
 # You may assume that chances for success are low
-# You may be happy if it saved your iotas
+# You may be happy if it saved your IOTAs
 #
 
 import sys
@@ -21,6 +21,7 @@ import os
 import iota
 import string
 import time
+import random
 import concurrent.futures
 from itertools import product
 from six import binary_type
@@ -30,7 +31,10 @@ from six import binary_type
 # CONFIGURATION
 # ####################################################
 
-# The seed to start brute-forcing with. Insert your seed as a string (surrounded by quotes, e.g. "SEED9")
+# The seed to start brute-forcing with. Insert your seed as a string (surrounded by quotes, e.g. "SEED9").
+# You can put a wildcard marker (*) to define the injection position for the brute-force mode.
+# You can surround a portion of characters with wildcard markers (*SEEDPART*) to define start and end position for
+# injection and character flipping mode
 SEED = ""
 
 # The amount of addresses to check per seed. Generating addresses is very time consuming. Keep as low as possible.
@@ -49,7 +53,7 @@ ABORT_AT_ADDRESS = "MY9KNOWN9ADDRESS9"
 # ATTENTION: Due to recent exchange of the hashing algorithm used in IOTA, checksums differ between IRI 1.2 and 1.3!
 ABORT_AT_SEED_CHECKSUM = ""
 
-# Needs to be set to 1, 2 or 3 ACCORDING to what your wallet used!
+# Needs to be set to 1, 2 or 3 ACCORDING to what your wallet used! 2 is the libraries default.
 ADDRESS_SECURITY_LEVEL = 2  # INTEGER - No quotes!
 
 # You can disable console status output during execution which will increase execution speed. Will make a huge
@@ -58,7 +62,7 @@ STATUS_OUTPUT = True  # Boolean - No quotes!
 
 # Characters to use for brute forcing. You can limit the character set if you don't want to go the full range for some
 # reason.
-BRUTE_FORCE_CHARACTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ9'  
+BRUTE_FORCE_CHARACTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ9'
 
 # More processes than CPU/Cores does not make sense. Decrease, if you want to use the machine in parallel.
 PARALLEL_PROCESSES = os.cpu_count() - 1
@@ -71,11 +75,18 @@ OUTPUT_FILE = "addresses.log"
 # EXECUTION
 # ####################################################
 
-def brute_force(length):
-    for l in range(0, length+1):  # only do lengths of 1 + 2
+def yield_systematic_character_sequences(char_min, char_max):
+    for l in range(char_min, char_max+1):  # +1 as it is not doing the last character otherwise
         to_attempt = product(BRUTE_FORCE_CHARACTERS, repeat=l)
         for attempt in to_attempt:
             yield ''.join(attempt)
+
+
+def yield_random_character_sequences(char_min, char_max):
+    while True:
+        random_seed_length = random.randint(char_min, char_max)
+        if random_seed_length > 0:
+            yield "".join([random.choice(BRUTE_FORCE_CHARACTERS) for i in range(0, random_seed_length)])
 
 
 def check_seed(seed):
@@ -83,75 +94,182 @@ def check_seed(seed):
     Checks addresses of input seed
     
     :param seed: 
-    :return: 
+    :yield: The seed itself
     """
     print("=> Nothing to generate. Just checking the addresses of the given seed")
     print()
-    yield seed
+    yield seed.replace("*", "")
 
 
-def brute_seed(seed):
+def brute_seed(seed, random_choice=False):
     """
-    Tries to brute-force missing characters by extending the seed up to 81 characters
+    Tries to brute-force missing characters by extending the seed systematically or randomly
     
     :param seed: 
-    :return: 
+    :yield: Generated seeds one by one
     """
-    missing_characters = 81 - len(seed)
 
-    if missing_characters <= 0:
-        print("ERROR: Your seed is already 81 characters or longer.")
-        sys.exit(-1)
-    else:
-        print("=> Trying to extend and brute-force missing {} character(s) ({} possibilities)".format(
-            missing_characters,
-            (missing_characters ** len(BRUTE_FORCE_CHARACTERS))+1
-        ))
+    # Check conditions
+    if seed.count('*') > 1:
+        print("ERROR: Your seed contains more than one injection marker '*'.")
         print()
+        sys.exit(-1)
 
-        if missing_characters > 2:
-            print("WARNING: You are missing more than 2 characters. Process might never finish.")
+    # Execute function
+    else:
+
+        # Warn user in case of random seed choices
+        if random_choice is True:
+            print("WARNING: The random generator can generate duplicates and will never stop itself")
             print()
 
-        # Give user time to read
-        time.sleep(2)
+        # Calculate range (offset + length) to brute-force
+        seed_length = len(seed.replace("*", ""))
 
-        for sample in brute_force(missing_characters):
-            yield seed + sample
+        # Ask min seed length from user
+        min_seed_extension_length = None
+        while min_seed_extension_length is None:
+            response = input("What is the MINIMUM seed length to generate (>={})? ".format(seed_length))
+            try:
+                if response == "" or int(response) < seed_length:
+                    min_seed_extension_length = 0
+                elif int(response) > 81:
+                    min_seed_extension_length = 81 - seed_length
+                else:
+                    min_seed_extension_length = int(response) - seed_length
+            except ValueError:
+                pass
+
+        # Ask max seed length from user
+        max_seed_extension_length = None
+        while max_seed_extension_length is None:
+            try:
+                response = input("What is the MAXIMUM seed length to generate (<={})? ".format(81))
+                if response == "" or int(response) > 81:
+                    max_seed_extension_length = 81 - seed_length
+                elif int(response) < seed_length:
+                    max_seed_extension_length = 0
+                else:
+                    max_seed_extension_length = int(response) - seed_length
+
+                # Do plausibility check
+                if max_seed_extension_length < min_seed_extension_length:
+                    print("INFO: Maximum seed length cannot be smaller than minimum seed length.")
+                    max_seed_extension_length = None
+            except ValueError:
+                pass
+
+        # Print spacer
+        print()
+
+        # Print warning on long brute-force tasks
+        if max_seed_extension_length > 3:
+            print("WARNING: You are missing more than 3 characters. Process might never finish.")
+            print()
+
+        if random_choice:
+            possibilities_string = ""
+        else:
+            # Print settings and brute-force possibilities
+            if max_seed_extension_length > min_seed_extension_length:
+                brute_force_possibilities = round((len(BRUTE_FORCE_CHARACTERS) ** max_seed_extension_length) - (len(BRUTE_FORCE_CHARACTERS) ** (min_seed_extension_length)))
+            else:
+                brute_force_possibilities = (len(BRUTE_FORCE_CHARACTERS) ** max_seed_extension_length)
+            print("=> Trying to {} missing {} character(s)".format("guess" if random_choice else "brute-force", max_seed_extension_length))
+            possibilities_string = " ({} possibilities)".format(brute_force_possibilities)
+
+        if min_seed_extension_length != max_seed_extension_length:
+            print("=> Only generating seeds between {} and {} characters{}".format(seed_length + min_seed_extension_length, seed_length + max_seed_extension_length, possibilities_string))
+        else:
+            print("=> Only generating seeds with {} characters{}".format(seed_length + max_seed_extension_length, possibilities_string))
+        print()
+
+        # Give user time to read
+        time.sleep(3)
+
+        # Always yield input seed as first sample
+        yield seed.replace("*", "")
+
+        if random_choice is False:
+            extension_generator = yield_systematic_character_sequences(min_seed_extension_length, max_seed_extension_length)
+        else:
+            extension_generator = yield_random_character_sequences(min_seed_extension_length, max_seed_extension_length)
+
+        # Yield generated seeds
+        for sample in extension_generator:
+            if "*" in seed:
+                yield seed.replace("*", sample)
+            else:
+                yield seed + sample
+
+
+def brute_random_seed(seed):
+    """
+    Tries to brute-force missing characters by extending the seed randomly
+    
+    :param seed: 
+    :yield: Generated random seed one by one
+    """
+    return brute_seed(seed, random_choice=True)
 
 
 def flip_seed(seed):
     """
-    Tries to iterate single characters, one by one
+    Tries to flip single characters, one by one
     
     :param seed: 
-    :return: 
+    :yield: Generated seeds one by one
     """
-    print("=> Trying to flip {} character(s) ({} possibilities)".format(
-        len(seed),
-        (len(seed) ** (len(BRUTE_FORCE_CHARACTERS)-1))+1
-    ))  # 26 possibilities, as the current character does not need to be checked
-    print()
 
-    # Give user time to read
-    time.sleep(2)
+    # Check and retrieve for injection markers
+    start_pos = 0
+    end_pos = len(seed)
+    if seed.count('*') == 0:
+        marker_valid = True
+    elif seed.count('*') != 2:
+        marker_valid = False
+    elif seed.rfind("*") - seed.find("*") <= 1:  # No character(s) in between markers
+        marker_valid = False
+    else:
+        marker_valid = True
+        start_pos = seed.find("*")
+        end_pos = seed.rfind("*") - 1  # -1 as we are removing the markers next, shifting everything
+        seed = seed.replace("*", "")
 
-    # Also test input itself
-    yield seed
+    # Check conditions
+    if not marker_valid:
+        print("ERROR: Your position markers are not set correctly! Start & end marker required.")
+        print()
+        sys.exit(-1)
 
-    # Flip characters position by position
-    for char in BRUTE_FORCE_CHARACTERS:
-        count = 0
-        for position in range(0, len(seed)):
+    else:
+        character_steps = end_pos - start_pos
+        print("=> Trying to flip {} character(s) ({} possibilities)".format(
+            character_steps,
+            ((len(BRUTE_FORCE_CHARACTERS)-1) * character_steps)
+        ))  # -1 possibilities, as the current character does not need to be checked
+        print()
 
-            # Yield if character wasn't already to one to use
-            if list(seed)[position] != char:
-                tmp = list(seed)
-                tmp[position] = char
-                yield "".join(tmp)
+        # Give user time to read
+        time.sleep(3)
 
-            # Increase position counter
-            count += 1
+        # Always yield input seed as first sample
+        yield seed.replace("*", "")
+
+        # Flip characters position by position
+        for char in BRUTE_FORCE_CHARACTERS:
+
+            count = 0
+            for position in range(start_pos, end_pos):
+
+                # Yield if character wasn't already to one to use
+                if list(seed)[position] != char:
+                    tmp = list(seed)
+                    tmp[position] = char
+                    yield "".join(tmp)
+
+                # Increase position counter
+                count += 1
 
 
 def inject_seed(seed):
@@ -159,45 +277,82 @@ def inject_seed(seed):
     Tries to inject a single character at each position, one by one
     
     :param seed: 
-    :return: 
+    :yield: Generated seeds one by one 
     """
-    character_positions = len(seed) + 1
-    print("=> Trying to inject characters at {} positions ({} possibilities)".format(
-        character_positions,
-        character_positions ** len(BRUTE_FORCE_CHARACTERS)
-    ))
-    print()
 
-    # Give user time to read
-    time.sleep(2)
+    # Check and retrieve for injection markers
+    start_pos = 0
+    end_pos = len(seed) + 1  # +1 as we also want to inject at the very end of the seed
+    if seed.count('*') == 0:
+        marker_valid = True
+    elif seed.count('*') != 2:
+        marker_valid = False
+    elif seed.rfind("*") - seed.find("*") <= 1:  # No character(s) in between markers
+        marker_valid = False
+    else:
+        marker_valid = True
+        start_pos = seed.find("*")
+        end_pos = seed.rfind("*")  # Though by removing wildcards in the next step and shifting characters, NOT -1 as we also want to inject at the very end of the seed
+        seed = seed.replace("*", "")
 
-    # Also test input itself
-    yield seed
+    # Check conditions
+    if not marker_valid:
+        print("ERROR: Your position markers are not set correctly! Start & end marker required.")
+        print()
+        sys.exit(-1)
 
-    # Inject characters position by position
-    for char in BRUTE_FORCE_CHARACTERS:
-        count = 0
-        for position in range(0, len(seed)+1):
-            tmp = list(seed)
-            tmp.insert(position, char)
+    else:
+        character_positions = end_pos - start_pos
+        print("=> Trying to inject characters at {} positions ({} possibilities)".format(
+            character_positions,
+            len(BRUTE_FORCE_CHARACTERS) * character_positions
+        ))
+        print()
 
-            # Yield if it isn't the same as in the previous loop cycle
-            if position != 0 and tmp[position-1] == char:
-                continue
-            else:
-                yield "".join(tmp)
+        # Give user time to read
+        time.sleep(3)
 
-            # Increase position counter
-            count += 1
+        # Always yield input seed as first sample
+        yield seed.replace("*", "")
+
+        # Inject characters position by position
+        for char in BRUTE_FORCE_CHARACTERS:
+            count = 0
+
+            for position in range(start_pos, end_pos):  # +1 as we also want to inject at the end
+                tmp = list(seed)
+                tmp.insert(position, char)
+
+                # Yield if it isn't the same as in the previous loop cycle
+                if position != 0 and tmp[position-1] == char:
+                    continue
+                else:
+                    yield "".join(tmp)
+
+                # Increase position counter
+                count += 1
 
 
 def sanitize_seed(seed):
     # Sanitize input
-    seed = seed.strip().upper()[0:81]
+    seed = seed.strip().upper()
+
+    # Chop seed if too long
+    if len(seed) > 81:
+        print("WARNING: Seed longer than 81 characters. Discarding exceeding characters.")
+        seed = seed[0:81]
 
     # Check if seed is valid
-    if not set(seed) <= set(string.ascii_uppercase + '9'):
+    if not set(seed) <= set(string.ascii_uppercase + '9*'):
         print("ERROR: Please configure a valid seed in the configuration section of the script.")
+        print()
+        return None
+
+    # Check if injection markers are not more than two, as it would be an invalid configuration
+    if seed.count("*") > 2:
+        print("ERROR: Invalid amount of injection markers. Use one to define the brute-force")
+        print("       position or two to mark the section of the seed to flip or inject at.")
+        print()
         return None
 
     # Encode seed as required
@@ -208,13 +363,18 @@ def print_configuration():
     print("CURRENT SETTINGS (change in script head):")
 
     if SEED:
-        print("   - Offset seed is '{}{}'".format(SEED[0:55], "..." if len(SEED) > 55 else ""))
+        print("   - Offset seed configuration is '{}{}'".format(SEED[0:55], "..." if len(SEED) > 55 else ""))
     else:
-        print("   - Offset seed is an empty string")
+        print("   - Offset seed configuration is an empty string")
+
+    if "*" in SEED:
+        print("   - Seed contains injection marker ('{}').".format("*" if SEED.count("*") == 1 else "**"))
+    else:
+        print("   - Seed does not contain an injection marker ('*'/'**')")
 
     print("   - {} addresses will be generated per seed{}".format(
         ADDRESSES_PER_SEED,
-        " (set to 0 if you are only looking for seed checksums)" if ADDRESSES_PER_SEED != 0 else ""
+        " (set 0 to calculate checksums only)" if ADDRESSES_PER_SEED != 0 else ""
     ))
 
     if ABORT_AT_SEED_CHECKSUM:
@@ -245,16 +405,18 @@ def get_mode():
     modes = {
         "1": check_seed,
         "2": brute_seed,
-        "3": flip_seed,
-        "4": inject_seed
+        "3": brute_random_seed,
+        "4": flip_seed,
+        "5": inject_seed
     }
 
     # Ask for mode
     print("WHICH OPERATION MODE DO YOU WANT TO EXECUTE?")
     print("  1. Just check the addresses of the given seed")
-    print("  2. Brute-force missing characters up to a 81 character seed")
-    print("  3. Flip single characters to detect single typos")
-    print("  4. Inject single characters at all positions to find single missing characters")
+    print("  2. Systematically brute-force missing characters")
+    print("  3. Randomly choose missing characters to brute-force seed")
+    print("  4. Flip single characters to detect single typos")
+    print("  5. Inject single characters at all positions to find a missing one")
 
     # Query user input until it's a valid one
     a = ""
@@ -335,6 +497,19 @@ def complete_task(task_sequence):
     return task_sequence
 
 
+def check_configuration():
+    assert isinstance(SEED, str)
+    assert isinstance(ABORT_AT_ADDRESS, str)
+    assert isinstance(ABORT_AT_SEED_CHECKSUM, str)
+    assert isinstance(BRUTE_FORCE_CHARACTERS, str)
+    assert isinstance(SEED, str)
+    assert isinstance(OUTPUT_FILE, str)
+    assert isinstance(ADDRESSES_PER_SEED, int)
+    assert isinstance(ADDRESS_SECURITY_LEVEL, int)
+    assert isinstance(PARALLEL_PROCESSES, int)
+    assert isinstance(STATUS_OUTPUT, bool)
+
+
 # ####################################################
 # Start-up code
 # ####################################################
@@ -357,21 +532,12 @@ if __name__ == '__main__':
         print("addresses takes very long slowing down the brute-force process significantly!")
         print()
 
-        print("Please note, that all found addresses will be written to an output file. If you")
+        print("Please note that all found addresses will be written to an output file. If you")
         print("know any of your previously used addresses, you can search the output file for.")
         print()
 
-        # Check configuration variable types
-        assert isinstance(SEED, str)
-        assert isinstance(ABORT_AT_ADDRESS, str)
-        assert isinstance(ABORT_AT_SEED_CHECKSUM, str)
-        assert isinstance(BRUTE_FORCE_CHARACTERS, str)
-        assert isinstance(SEED, str)
-        assert isinstance(OUTPUT_FILE, str)
-        assert isinstance(ADDRESSES_PER_SEED, int)
-        assert isinstance(ADDRESS_SECURITY_LEVEL, int)
-        assert isinstance(PARALLEL_PROCESSES, int)
-        assert isinstance(STATUS_OUTPUT, bool)
+        # Check configuration variables
+        check_configuration()
 
         # Check python version
         if sys.version_info.major < 3:
@@ -383,6 +549,8 @@ if __name__ == '__main__':
             print("ERROR: No seed configured!")
             print()
             sys.exit(-1)
+
+        # Check configuration
 
         # Sanitize and encode seed
         seed_offset = sanitize_seed(SEED)
@@ -446,4 +614,5 @@ if __name__ == '__main__':
     except KeyboardInterrupt:
         print("Execution interrupted by user.")
     finally:
+        print()
         input("Please press >enter< to exit...")
