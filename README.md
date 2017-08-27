@@ -12,11 +12,12 @@ You wanted an IOTA miner? Here is your IOTA miner... mining your seed. IOTA seed
     - You can set injection markers (* / **) to guide the tool at a certain section of your seed
 
 ## Execution
-1) Edit configuration section in "run.py"
+1) (Follow installation steps below)
+2) Edit configuration section in "run.py"
     1) Configure your seed to offset with
     2) Adapt some default configuration values to your specific needs
-2) Open a command line window, traverse to the tool's folder and launch "run.py" with your Python3 interpreter
-3) Follow the dialogue
+3) Open a command line window, traverse to the tool's folder and launch "run.py" with your Python3 interpreter
+4) Follow the dialogue
 
 ## Important
 This tool ships with a copy of the Pyota libary (v1.2.0b1), because:
