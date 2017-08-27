@@ -72,7 +72,12 @@ OUTPUT_FILE = "addresses.log"
 
 
 # ####################################################
+# ####################################################
+# ####################################################
 # EXECUTION
+# DO NOT EDIT BELOW THIS LINE!
+# ####################################################
+# ####################################################
 # ####################################################
 
 def yield_systematic_character_sequences(char_min, char_max):
@@ -106,6 +111,7 @@ def brute_seed(seed, random_choice=False):
     Tries to brute-force missing characters by extending the seed systematically or randomly
     
     :param seed: 
+    :param random_choice: Whether to systematically generate patterns or to pick random character sequences
     :yield: Generated seeds one by one
     """
 
@@ -172,7 +178,7 @@ def brute_seed(seed, random_choice=False):
         else:
             # Print settings and brute-force possibilities
             if max_seed_extension_length > min_seed_extension_length:
-                brute_force_possibilities = round((len(BRUTE_FORCE_CHARACTERS) ** max_seed_extension_length) - (len(BRUTE_FORCE_CHARACTERS) ** (min_seed_extension_length)))
+                brute_force_possibilities = round((len(BRUTE_FORCE_CHARACTERS) ** max_seed_extension_length) - (len(BRUTE_FORCE_CHARACTERS) ** min_seed_extension_length))
             else:
                 brute_force_possibilities = (len(BRUTE_FORCE_CHARACTERS) ** max_seed_extension_length)
             print("=> Trying to {} missing {} character(s)".format("guess" if random_choice else "brute-force", max_seed_extension_length))
@@ -454,7 +460,7 @@ def yield_addresses(seed):
         yield binary_type(address).decode('ascii')
 
 
-def check_addresses(seed, generated_seed_checksum=None):
+def check_addresses(seed, seed_checksum=None):
     results = dict()
     if ADDRESSES_PER_SEED:
         count = 1
@@ -465,7 +471,7 @@ def check_addresses(seed, generated_seed_checksum=None):
                     sys.exit(0)
             results[count] = address
             count += 1
-    return seed, generated_seed_checksum, results
+    return seed, seed_checksum, results
 
 
 def complete_task(task_sequence):
@@ -510,107 +516,108 @@ def check_configuration():
     assert isinstance(STATUS_OUTPUT, bool)
 
 
+def main():
+    print()
+    print("You wanted a miner? Here is your IOTA miner... mining your seed.")
+    print("IOTA seed recovery tool to straighten your typos.", "Running on PyOTA vers.", iota.__version__)
+    print()
+
+    print("              ###################################################               ")
+    print("              ## Donations appreciated if this tool helped you ##               ")
+    print("              ## QPLGOG9PMIMUAW9UDMUNZQHPXZPXDNGLBEIHILXHWHIOF ##               ")
+    print("              ## HLIHPDDERXAJQKUQDEORMHSUWVZQE9JYSHIWADIIPAOJD ##               ")
+    print("              ###################################################               ")
+    print()
+
+    print("Please note, although the generation of seeds is quite fast, the calculation of")
+    print("addresses takes very long slowing down the brute-force process significantly!")
+    print()
+
+    print("Please note that all found addresses will be written to an output file. If you")
+    print("know any of your previously used addresses, you can search the output file for.")
+    print()
+
+    # Check configuration variables
+    check_configuration()
+
+    # Check python version
+    if sys.version_info.major < 3:
+        print("ERROR: Python3 required!")
+        print()
+        sys.exit(-1)
+
+    if SEED is None:
+        print("ERROR: No seed configured!")
+        print()
+        sys.exit(-1)
+
+    # Check configuration
+
+    # Sanitize and encode seed
+    seed_offset = sanitize_seed(SEED)
+
+    # Continue if seed was legit
+    if seed_offset is not None:
+
+        # Prepare output file
+        if OUTPUT_FILE:
+            print("!! Make sure to have enough disk space for the output file or disable it !!")
+            print()
+            with open(OUTPUT_FILE, "w") as f:
+                pass
+
+        # Print configuration
+        print_configuration()
+
+        # Query mode to execute from user
+        brute_force_function = get_mode()
+
+        # Initialize process pool executor to execute tasks in dedicated processes
+        queued_tasks = []
+        with concurrent.futures.ProcessPoolExecutor(max_workers=PARALLEL_PROCESSES) as executor:
+
+            status_count = 0
+
+            # Execute seed generation and launch address generation in parallel
+            for generated_seed in brute_force_function(seed_offset):
+
+                # Calculate seed's checksum
+                generated_seed_checksum = get_checksum(generated_seed)
+
+                # Abort if user is looking for seed matching a given checksum
+                if ABORT_AT_SEED_CHECKSUM and ABORT_AT_SEED_CHECKSUM == generated_seed_checksum:
+                    print("SUCCESS! Seed {} matching checksum {}".format(generated_seed, generated_seed_checksum))
+                    print("Search for further seeds if this one was not the one you were looking for!")
+                    sys.exit(0)
+
+                # If all workers are busy, wait for first task to complete
+                if len(queued_tasks) >= PARALLEL_PROCESSES:
+                    # Update remaining tasks
+                    queued_tasks = complete_task(queued_tasks)
+
+                # Print status
+                if STATUS_OUTPUT:
+                    print("Working on", generated_seed)
+
+                # Submit address generation and verification task
+                new_task = executor.submit(check_addresses, generated_seed, generated_seed_checksum)
+
+                # Keep reference to active task
+                queued_tasks.append(new_task)
+
+            # Wait and complete last tasks
+            while queued_tasks:
+                # Update remaining tasks
+                queued_tasks = complete_task(queued_tasks)
+
+
 # ####################################################
 # Start-up code
 # ####################################################
 if __name__ == '__main__':
 
     try:
-        print()
-        print("You wanted a miner? Here is your IOTA miner... mining your seed.")
-        print("IOTA seed recovery tool to straighten your typos.", "Running on PyOTA vers.", iota.__version__)
-        print()
-
-        print("              ###################################################               ")
-        print("              ## Donations appreciated if this tool helped you ##               ")
-        print("              ## QPLGOG9PMIMUAW9UDMUNZQHPXZPXDNGLBEIHILXHWHIOF ##               ")
-        print("              ## HLIHPDDERXAJQKUQDEORMHSUWVZQE9JYSHIWADIIPAOJD ##               ")
-        print("              ###################################################               ")
-        print()
-
-        print("Please note, although the generation of seeds is quite fast, the calculation of")
-        print("addresses takes very long slowing down the brute-force process significantly!")
-        print()
-
-        print("Please note that all found addresses will be written to an output file. If you")
-        print("know any of your previously used addresses, you can search the output file for.")
-        print()
-
-        # Check configuration variables
-        check_configuration()
-
-        # Check python version
-        if sys.version_info.major < 3:
-            print("ERROR: Python3 required!")
-            print()
-            sys.exit(-1)
-
-        if SEED is None:
-            print("ERROR: No seed configured!")
-            print()
-            sys.exit(-1)
-
-        # Check configuration
-
-        # Sanitize and encode seed
-        seed_offset = sanitize_seed(SEED)
-
-        # Continue if seed was legit
-        if seed_offset is not None:
-
-            # Prepare output file
-            if OUTPUT_FILE:
-                print("!! Make sure to have enough disk space for the output file or disable it !!")
-                print()
-                with open(OUTPUT_FILE, "w") as f:
-                    pass
-
-            # Print configuration
-            print_configuration()
-
-            # Query mode to execute from user
-            brute_force_function = get_mode()
-
-            # Initialize process pool executor to execute tasks in dedicated processes
-            queued_tasks = []
-            with concurrent.futures.ProcessPoolExecutor(max_workers=PARALLEL_PROCESSES) as executor:
-
-                status_count = 0
-
-                # Execute seed generation and launch address generation in parallel
-                for generated_seed in brute_force_function(seed_offset):
-
-                    # Calculate seed's checksum
-                    generated_seed_checksum = get_checksum(generated_seed)
-
-                    # Abort if user is looking for seed matching a given checksum
-                    if ABORT_AT_SEED_CHECKSUM and ABORT_AT_SEED_CHECKSUM == generated_seed_checksum:
-                        print("SUCCESS! Seed {} matching checksum {}".format(generated_seed, generated_seed_checksum))
-                        print("Search for further seeds if this one was not the one you were looking for!")
-                        sys.exit(0)
-
-                    # If all workers are busy, wait for first task to complete
-                    if len(queued_tasks) >= PARALLEL_PROCESSES:
-
-                        # Update remaining tasks
-                        queued_tasks = complete_task(queued_tasks)
-
-                    # Print status
-                    if STATUS_OUTPUT:
-                        print("Working on", generated_seed)
-
-                    # Submit address generation and verification task
-                    new_task = executor.submit(check_addresses, generated_seed, generated_seed_checksum)
-
-                    # Keep reference to active task
-                    queued_tasks.append(new_task)
-
-                # Wait and complete last tasks
-                while queued_tasks:
-
-                    # Update remaining tasks
-                    queued_tasks = complete_task(queued_tasks)
-
+        main()
     except KeyboardInterrupt:
         print("Execution interrupted by user.")
     finally:
