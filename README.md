@@ -1,18 +1,14 @@
-# iota-miner
-You wanted an IOTA miner? Here is your IOTA miner... mining your seed. IOTA seed recovery tool to straighten your typos.
+# IOTA miner
+You wanted an IOTA miner? Here is your IOTA miner... mining your seed. IOTA seed recovery tool to straighten your typos. Please note that if you are missing or got wrong more than a very few characters, chances of discovering your seed decrease rapidly to zero.
 
 ##### Operation Modes:
-
-    - Just check the addresses of the given seed  
-    - Brute-force missing characters up to a 81 character seed  
-    - Flip single characters to detect single typos  
-    - Inject single characters at all positions to find single missing characters
+    
+    - Just check the addresses of the given seed
+    - Systematically brute-force missing characters
+    - Randomly choose missing characters to brute-force seed
+    - Flip single characters to detect single typos
+    - Inject single characters at all positions to find a missing one
   
-##### Upcoming features:
-
-     - Injection marker (wildcard) telling the tool where to inject characters
-     - Option to only test 81 character seeds
-
 ## Prerequisite
 - Python3
 - PyOpenSSL
@@ -31,6 +27,6 @@ This tool ships with a copy of the Pyota libary (v1.2.0b1), because:
     > pip3 install pyopenssl
 
 ## Execution
-1) Configure settings at the top section in run.py
+1) Edit configuration section in "run.py"
 2) Launch run.py
     > python3 run.py
