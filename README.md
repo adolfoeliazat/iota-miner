@@ -30,5 +30,8 @@ This tool ships with a copy of the Pyota libary (v1.2.0b1), because:
 
 ## Execution
 1) Edit configuration section in "run.py"
+    1) Configure your seed to offset with
+    2) Adapt some default configuration values to your specific needs
 2) Launch run.py
-    > python3 run.py
+    1) > python3 run.py
+    2) Follow the dialogue
