@@ -8,6 +8,8 @@ You wanted an IOTA miner? Here is your IOTA miner... mining your seed. IOTA seed
     - Randomly choose missing characters to brute-force seed
     - Flip single characters to detect single typos
     - Inject single characters at all positions to find a missing one
+    
+    - You can set injection markers (* / **) to guide the tool at a certain section of your seed
   
 ## Prerequisite
 - Python3
