@@ -1,6 +1,8 @@
 # IOTA miner
 You wanted an IOTA miner? Here is your IOTA miner... mining your seed. IOTA seed recovery tool to straighten your typos. Please note that if you are missing or got wrong more than a very few characters, chances of discovering your seed decrease rapidly to zero.
 
+This tool is (currently) not connecting to the IOTA network. Addresses are not checked online for actual balances. The use case of this tool is to discover a seed for a known seed checksum or an address you still remember (e.g. from browser history after using an IOTA explorer, Bitfinex withdrawal log,...). If you cannot remember any of this data, you need to implement an online validation mechanism and might want to spawn your own full node for best performance.
+
 ##### Operation Modes:
     
     - Just check the addresses of the given seed
